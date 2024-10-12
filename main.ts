@@ -11,25 +11,12 @@ const help = `${PROGRAM_NAME} v${VERSION}
   PATH                     Path to the Executable
 `;
 
-class Args {
+interface Args {
   path: string;
   name: string;
   comment: string | null;
   terminal: boolean;
   categories: string[];
-  constructor(
-    path: string,
-    name: string,
-    comment: string | null,
-    terminal: boolean,
-    categories: string[],
-  ) {
-    this.path = path;
-    this.name = name;
-    this.comment = comment;
-    this.terminal = terminal;
-    this.categories = categories;
-  }
 }
 
 async function extractArgs(args: cli.Args): Promise<Args> {
@@ -72,7 +59,7 @@ async function extractArgs(args: cli.Args): Promise<Args> {
     throw "--categories requires a string argument";
   }
 
-  return new Args(path, name, comment, terminal, categories);
+  return { path, name, comment, terminal, categories };
 }
 
 function constructDesktop(args: Args): string {
