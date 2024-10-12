@@ -20,11 +20,11 @@ interface Args {
 }
 
 async function extractArgs(args: cli.Args): Promise<Args> {
-  if (args._.length != 1 || typeof args._[0] != "string") {
+  if (args._.length != 1) {
     throw "Please supply a input .desktop file path";
   }
 
-  let path = args._[0];
+  let path = String(args._[0]);
   try {
     path = await Deno.realPath(path);
   } catch {
@@ -32,31 +32,16 @@ async function extractArgs(args: cli.Args): Promise<Args> {
   }
 
   let name = basename(path, extname(path));
-  if (typeof (args.name) == "string" || typeof (args.name) == "number") {
-    name = String(args.name);
-  } else if (args.name != null) {
-    throw "--name requires an argument";
+  if (args.name != null) {
+    name = args.name;
   }
 
-  let comment = null;
-  if (typeof (args.comment) == "string" || typeof (args.comment) == "number") {
-    comment = String(args.comment);
-  } else if (args.comment != null) {
-    throw "--comment requires an argument";
-  }
-
-  let terminal = false;
-  if (typeof (args.terminal) == "boolean") {
-    terminal = args.terminal;
-  } else if (args.terminal != null) {
-    throw "--terminal does not take any arguments";
-  }
+  const comment: string | null = args.comment;
+  const terminal = args.terminal;
 
   let categories: string[] = [];
-  if (typeof (args.categories) == "string") {
+  if (args.categories != null) {
     categories = args.categories.split(/\s/);
-  } else if (args.categories != null) {
-    throw "--categories requires a string argument";
   }
 
   return { path, name, comment, terminal, categories };
@@ -88,8 +73,17 @@ function constructDesktop(args: Args): string {
 }
 
 if (import.meta.main) {
-  const raw_args = cli.parseArgs(Deno.args);
-  if (raw_args.h != null || raw_args.help != null) {
+  const raw_args = cli.parseArgs(Deno.args, {
+    string: ["name", "comment", "categories"],
+    boolean: ["help", "terminal"],
+    alias: {
+      help: "h",
+      terminal: "t",
+      name: "n",
+      comment: "c",
+    },
+  });
+  if (raw_args.help) {
     console.log(help);
     Deno.exit(0);
   }
